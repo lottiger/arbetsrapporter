@@ -6,12 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "setup:local": "node scripts/setup-local.mjs",
+    "config:check": "node scripts/check-config.mjs",
+    "db:check": "node scripts/check-db.mjs",
+    "admin:create": "node --conditions=react-server scripts/create-admin.mjs",
+    "templates:publish": "node --conditions=react-server scripts/publish-templates.mjs",
+    "test:auth": "node --conditions=react-server --test scripts/auth.integration.test.mjs",
+    "test:config": "node --test scripts/config.test.mjs",
+    "test:templates": "node --test scripts/templates.test.mjs"
   },
   "dependencies": {
+    "@better-auth/mongo-adapter": "1.7.7",
+    "@next/env": "16.3.8",
+    "better-auth": "1.7.7",
+    "mongodb": "7.7.0",
     "next": "16.3.8",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
