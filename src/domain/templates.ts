@@ -145,6 +145,32 @@ export function formatHours(minutes: number) {
   return (Math.round((minutes / 60) * 100) / 100).toLocaleString("sv-SE", { maximumFractionDigits: 2 });
 }
 
+/** Decimal hours for input fields. Missing/invalid times never produce a stale suggestion. */
+export function calculatedTimeHours(rule: Extract<TemplateRule, { type: "time_span" }>, answers: Answers): string | null {
+  const start = answers[rule.startField];
+  const end = answers[rule.endField];
+  if (typeof start !== "string" || typeof end !== "string") return null;
+  const span = minutesBetween(start, end, rule.overnight);
+  if (span === null) return null;
+  const rawBreak = rule.breakMinutesField ? answers[rule.breakMinutesField] : undefined;
+  const breakText = typeof rawBreak === "string" ? rawBreak.trim() : "";
+  if (rawBreak !== undefined && typeof rawBreak !== "string") return null;
+  if (breakText && !/^\d+$/.test(breakText)) return null;
+  const breakMinutes = breakText ? Number(breakText) : 0;
+  if (!Number.isSafeInteger(breakMinutes) || breakMinutes > span) return null;
+  return String(Math.round(((span - breakMinutes) / 60) * 100) / 100);
+}
+
+export function fillAutomaticTimes(definition: TemplateDefinition, answers: Answers, fields: readonly string[]): Answers {
+  const filled = { ...answers };
+  for (const rule of definition.rules) {
+    if (rule.type === "time_span" && fields.includes(rule.billableHoursField)) {
+      filled[rule.billableHoursField] = calculatedTimeHours(rule, answers) ?? "";
+    }
+  }
+  return filled;
+}
+
 function normalize(field: FieldDefinition, raw: AnswerValue): AnswerValue {
   if (field.type === "multiselect") {
     const values = Array.isArray(raw) ? raw : typeof raw === "string" && raw ? [raw] : [];
@@ -180,7 +206,7 @@ function fieldError(field: FieldDefinition, value: AnswerValue): string | null {
       if (!DECIMAL_PATTERN.test(text)) return `${field.label}: ange ett tal med högst två decimaler.`;
       break;
     case "date":
-      if (!DATE_PATTERN.test(text)) return `${field.label}: ange datum som ÅÅÅÅ-MM-DD.`;
+      if (!DATE_PATTERN.test(text) || !Number.isFinite(Date.parse(`${text}T00:00:00Z`)) || new Date(`${text}T00:00:00Z`).toISOString().slice(0, 10) !== text) return `${field.label}: ange ett giltigt datum som ÅÅÅÅ-MM-DD.`;
       break;
     case "time":
       if (!TIME_PATTERN.test(text)) return `${field.label}: ange klockslag som HH:MM.`;

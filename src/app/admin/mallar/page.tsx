@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requirePageAccess } from "@/server/auth/page-access";
 import { getDatabase } from "@/server/db";
 import { getPublishedTemplate, listTemplates } from "@/server/templates/service";
-import { describeRule, fieldTypeLabels } from "@/components/reports/field-labels";
+import { describeRule, fieldTypeLabels, sectionDescription } from "@/components/reports/field-labels";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icon } from "@/components/ui/icon";
 
@@ -21,13 +21,12 @@ export default async function TemplatesPage() {
       <header className="page-heading">
         <p className="eyebrow">INSTÄLLNINGAR</p>
         <h1>Mallar</h1>
-        <p>Företagets publicerade rapportmallar. Publicerade versioner ändras aldrig; en ändrad mall får ett nytt versionsnummer och gamla rapporter behåller sin version.</p>
+        <p>Företagets rapportmallar med fält, anvisningar och regler.</p>
       </header>
       {templates.length === 0 && (
         <section className="panel">
           <EmptyState icon="template" title="Inga mallar är publicerade för företaget">
-            <p>Mallarna för TMA och bärgning publiceras av den som driver tjänsten med kommandot nedan. Därefter visas de här och under Ny rapport.</p>
-            <p className="empty-note"><code>npm run templates:publish -- &quot;{company.name}&quot;</code></p>
+            <p>Kontakta den som ansvarar för tjänsten för att lägga till företagets rapportmallar.</p>
           </EmptyState>
         </section>
       )}
@@ -39,7 +38,6 @@ export default async function TemplatesPage() {
               <p>{template.definition.description}</p>
             </div>
             <dl className="template-facts">
-              <div><dt>Version</dt><dd>{template.version}</dd></div>
               <div><dt>Publicerad</dt><dd>{dateFormat.format(template.publishedAt)}</dd></div>
               <div><dt>Källa</dt><dd>{template.definition.source}</dd></div>
             </dl>
@@ -47,7 +45,7 @@ export default async function TemplatesPage() {
           {template.definition.sections.map((section) => (
             <div className="template-section" key={section.key}>
               <h3>{section.title}</h3>
-              {section.description && <p className="template-section-note">{section.description}</p>}
+              {sectionDescription(template.definition, section) && <p className="template-section-note">{sectionDescription(template.definition, section)}</p>}
               <div className="table-scroll">
                 <table className="report-table field-table">
                   <thead><tr><th scope="col">Fält</th><th scope="col">Typ</th><th scope="col">Krav</th><th scope="col">Anvisning och alternativ</th></tr></thead>
@@ -81,7 +79,7 @@ export default async function TemplatesPage() {
       ))}
       <div className="notice">
         <Icon name="template" />
-        <div><h2>Så ändras en mall</h2><p>Mallarna konfigureras i appens kod och publiceras per företag. Vid nästa publicering får en ändrad mall ett nytt versionsnummer. Formuläret under Ny rapport använder alltid företagets senaste publicerade version.</p></div>
+        <div><h2>Ändra en mall</h2><p>Kontakta den som ansvarar för tjänsten om ett fält eller en regel behöver ändras. Uppdaterade mallar används för nya rapporter. Befintliga rapporter behåller sina uppgifter och anvisningar.</p></div>
       </div>
     </>
   );

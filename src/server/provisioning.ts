@@ -17,7 +17,7 @@ export async function provisionCompany(
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
   if (companyName.length < 2 || companyName.length > 120 || !name || name.length > 120 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || input.password.length < 12 || input.password.length > 128) {
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || input.password.length < 6 || input.password.length > 128) {
     throw new Error("Kontrollera företagsnamn, namn och e-post. Lösenordet ska ha 12–128 tecken.");
   }
   await ensureCompanyIndexes(db);

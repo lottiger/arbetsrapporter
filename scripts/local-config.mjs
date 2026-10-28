@@ -10,7 +10,7 @@ export async function createLocalEnv(file) {
     'MONGODB_URI=""',
     "MONGODB_DB=arbetsrapporter_dev",
     `BETTER_AUTH_SECRET=${randomBytes(32).toString("base64url")}`,
-    "BETTER_AUTH_URL=http://localhost:3000",
+    "BETTER_AUTH_URL=http://localhost:3001",
     "",
   ].join("\n");
 
@@ -80,7 +80,7 @@ export function configIssues(env) {
       throw new Error("Invalid auth origin");
     }
   } catch {
-    issues.push("BETTER_AUTH_URL ska vara appens basadress, lokalt http://localhost:3000, utan extra sökväg.");
+    issues.push("BETTER_AUTH_URL ska vara appens basadress, lokalt http://localhost:3001, utan extra sökväg.");
   }
 
   return issues;

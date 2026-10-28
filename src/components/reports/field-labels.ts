@@ -1,4 +1,4 @@
-import { fieldByKey, type FieldType, type TemplateDefinition, type TemplateRule } from "@/domain/templates";
+import { fieldByKey, type FieldType, type SectionDefinition, type TemplateDefinition, type TemplateRule } from "@/domain/templates";
 
 export const fieldTypeLabels: Record<FieldType, string> = {
   text: "Text",
@@ -24,7 +24,7 @@ export function describeRule(definition: TemplateDefinition, rule: TemplateRule)
       return `${rule.label} beräknas från ${label(rule.startField).toLowerCase()} till ${label(rule.endField).toLowerCase()}` +
         (rule.breakMinutesField ? ` minus ${label(rule.breakMinutesField).toLowerCase()}` : "") +
         (rule.overnight ? ", även över midnatt" : "") +
-        `. Värdet visas bredvid ${label(rule.billableHoursField).toLowerCase()} och ersätter aldrig det angivna värdet; en avvikelse ger en varning.`;
+        `. ${label(rule.billableHoursField)} fylls i automatiskt och kan ändras manuellt. En avvikelse från beräknad tid ger en varning.`;
     case "required_if":
       return `${label(rule.field)} måste fyllas i när ${label(rule.whenField).toLowerCase()} är ${rule.equalsAny.map((value) => optionLabel(rule.whenField, value).toLowerCase()).join(" eller ")}.`;
     case "at_least_one":
@@ -32,4 +32,10 @@ export function describeRule(definition: TemplateDefinition, rule: TemplateRule)
     default:
       return "";
   }
+}
+
+/** Current input guidance also applies to previously published templates. */
+export function sectionDescription(definition: TemplateDefinition, section: SectionDefinition) {
+  const timeRules = definition.rules.filter((rule) => rule.type === "time_span" && section.fields.some((field) => field.key === rule.billableHoursField));
+  return timeRules.length ? timeRules.map((rule) => describeRule(definition, rule)).join(" ") : section.description;
 }

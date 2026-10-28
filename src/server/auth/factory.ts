@@ -15,7 +15,7 @@ export function authOptions(client: MongoClient, db: Db, config: ServerConfig) {
     emailAndPassword: {
       enabled: true,
       disableSignUp: true,
-      minPasswordLength: 12,
+      minPasswordLength: 6,
       maxPasswordLength: 128,
     },
     session: {

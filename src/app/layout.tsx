@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Arbetsrapporter", template: "%s | Arbetsrapporter" },
-  description: "Arbetsrapporter, granskning och faktureringsunderlag på ett ställe.",
+  description: "Arbetsrapporter och fakturaunderlag på ett ställe.",
   robots: { index: false, follow: false },
 };
 

@@ -69,8 +69,8 @@ export async function requireCompanyAccess(
 }
 
 export function homeForRoles(roles: readonly CompanyRole[]) {
-  if (roles.includes("company_admin")) return "/admin/granskning";
+  if (roles.includes("company_admin")) return "/admin/fakturaunderlag";
   if (roles.includes("reporter")) return "/rapportor";
-  if (roles.includes("billing")) return "/admin/underlag";
+  if (roles.includes("billing")) return "/admin/fakturaunderlag";
   return "/ingen-behorighet";
 }

@@ -30,7 +30,6 @@ export default async function NewReportPage() {
             return (
               <Link className="template-card template-link" key={template.key} href={`/rapportor/ny/${encodeURIComponent(template.key)}`}>
                 <span className={`shortcut-icon ${look.tone}`}><Icon name={look.icon} /></span>
-                <span className="badge">Version {template.version}</span>
                 <h2>{template.title}</h2>
                 <p>{template.description}</p>
                 <span className="template-meta">{template.fieldCount} fält, {template.requiredCount} obligatoriska</span>

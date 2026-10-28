@@ -25,8 +25,53 @@ av flera fält). `npm run templates:publish` publicerar dem per företag till `t
 `templateVersions`; en ändrad definition ger en ny version och publicerade versioner ändras
 aldrig. Rapportören ser företagets mallar under Ny rapport och kan fylla i och kontrollera
 formuläret; administratören ser fält och regler under Mallar. Arbetad tid beräknas även över
-midnatt och visas bredvid debiterbara timmar utan att ersätta dem. Sparande av rapporter,
-kundregister och bilder är inte implementerade.
+midnatt och visas bredvid debiterbara timmar.
+
+2026-10-19: Utkast och direkt inskick finns för båda mallarna. Rapportören kan skicka in
+direkt eller spara ofullständiga utkast för att fortsätta senare. Inskick kontrolleras på servern mot rapportens
+ursprungliga mallversion och skapar en oföränderlig version med mall, svar, företagsnamn,
+verifierad aktör, tid, beräkningar och varningar. Status, version och historikhändelse sparas
+i samma transaktion. Versionsräknaren `revision` hindrar att samtidiga ändringar skriver
+över varandra. Upprepad skapning med samma ID skriver inte över befintliga svar.
+
+Rapportörens listor avgränsas till eget konto och valt företag. Granskaren ser endast
+inskickade rapporter i sitt företag och kan läsa dem. API och sidor kontrollerar session,
+aktivt medlemskap, roll och ägarskap. Inskickade rapporter kan inte redigeras.
+Kundregister och bilder återstår. Komplettering och godkännande tillkom 2026-10-19, se nedan.
+Se [rapportflödets verifiering](verifiering-steg-c.md).
+
+2026-10-18: Enligt användarens ändrade önskemål fylls tidsfältet nu i automatiskt
+från mallens tidsregel (inklusive eventuell rast). Användaren kan skriva över värdet
+och välja **Använd beräknad tid** för att återgå till automatisk beräkning. Valet sparas
+som `automaticTimeFields` tillsammans med utkastet och den inskickade versionen.
+Servern räknar om fält som står i automatiskt läge före sparande och inskick. Äldre
+utkast med ett ifyllt tidsfält behåller sitt värde som manuellt tills användaren väljer
+automatik. Publicerade mallar och tidigare inskickade rapporter ändras inte.
+
+2026-10-19: Komplettering, nya inskickade versioner och godkännande är implementerade.
+En begäran om komplettering kräver en trimmad kommentar på högst 2000 tecken. Rapportören
+kan spara ändringar och skicka in igen; granskaren ser den tidigare inskickade versionen
+tills det nya inskicket är klart. Beslut kräver både aktuell `revision` och exakt
+`versionId`. Beslut, status och historikhändelse sparas i samma transaktion.
+
+Användaren har beslutat att en företagsadministratör **får godkänna egna rapporter**.
+Enbart rapportörs- eller faktureringsrollen räcker inte. Godkännande sparar aktör,
+tid och versionsreferens och sätter faktureringsstatus till `ready`. Faktureringsansvarig
+kan läsa godkända versioner; administratören kan även granska och läsa tidigare versioner.
+
+2026-10-19: Användaren vill avvakta med PDF och kunna markera **Helt klar**, som betyder
+administrerad i bokföringssystemet. Knappen **Markera som inlagd** finns för administratör
+och faktureringsansvarig på godkända kort och på detaljsidan. Kortet blir grönt med
+texten **Inlagd / helt klar** och visas i **Alla** och **Helt klara**. `billingHandled` sparar verifierad
+användare, tid och godkänd version. Händelsen `billing_handled` sparas i samma transaktion.
+
+Efter användarens förenkling finns en gemensam menyflik och arbetsyta, **Fakturaunderlag**,
+på `/admin/fakturaunderlag`. De tidigare sidorna för granskning och faktureringsunderlag
+är borttagna; gamla länkar omdirigeras, inklusive versionsparametrar. Listan har tre filter:
+**Alla**, **Att hantera** och **Helt klara**. Förklaringsrutan och checkbox-steget är borttagna.
+Administratören ser inskickade rapporter, begärda kompletteringar och godkända rapporter.
+Faktureringsrollen ser endast godkända rapporter och kan klarmarkera dem. Serverns separata
+behörighetskontroller för granskning och fakturering används av den gemensamma vyn.
 
 ## Verifierade krav från briefen
 
@@ -40,6 +85,11 @@ kundregister och bilder är inte implementerade.
 - TMA ska kunna hantera tid över midnatt. Beräknad tid får inte tyst ersätta angiven
   debiterbar tid.
 - PDF ska använda en sparad, godkänd version. Fortnox-integration kommer senare.
+
+2026-10-20: Synliga mall- och rapportversionsnummer har tagits bort. Historiken visar
+inskick med datum, tid och rapportör; tidigare inskick går fortfarande att öppna.
+Godkännandeknappen heter **Godkänn rapport**. Tekniska publiceringsinstruktioner visas
+enbart i utvecklardokumentationen och Next.js utvecklingsindikator är avstängd.
 
 ## Val av inloggning och lagring i steg B
 
@@ -122,19 +172,28 @@ Den föreslagna lagringen kräver därför MongoDB med stöd för transaktioner,
 någon anslutning görs. Saknad konfiguration ska stoppa skyddade operationer tydligt;
 den får aldrig ge en tyst reservlösning med demoidentitet eller publik data.
 
-## Planerade statusövergångar (ännu inte implementerade)
+## Statusövergångar
+
+Alla rapportövergångar i tabellen nedan är implementerade. Faktureringsstatus är
+`not_ready` före godkännande och ändras till `ready` vid godkännande.
 
 Behåll briefens fyra rapportstatusar. Spara varje inskick som en oföränderlig version.
 Vid komplettering utgår ett redigerbart utkast från föregående version, som bevaras.
 
 | Från | Händelse | Till | Serverkrav |
 | --- | --- | --- | --- |
+| Ny rapport | Skicka in direkt | `submitted` | Rapportör; aktuell publicerad mall i rätt företag; full validering. Rapport, version 1 och inskickshändelse skapas i samma transaktion. |
 | `draft` | Spara utkast | `draft` | Rapportens ägare; rätt företag. Partiellt ifyllda svar tillåts. |
 | `draft` | Skicka in | `submitted` | Ägare; validering mot rapportens publicerade mallversion; ny snapshot. |
 | `submitted` | Begär komplettering | `needs_completion` | Företagsadministratör; kommentar med innehåll efter trimning; referens till granskad version. |
 | `needs_completion` | Spara komplettering | `needs_completion` | Ägare; tidigare versioner och kommentarer bevaras. |
 | `needs_completion` | Skicka in igen | `submitted` | Ägare; ny validering och ny snapshot; nytt inskick loggas. |
 | `submitted` | Godkänn | `approved` | Företagsadministratör; precis den inskickade version som granskats. |
+
+Direkt inskick använder `POST /api/foretag/[id]/rapporter/skicka-in`. Ogiltiga uppgifter
+skapar inga dokument. Klientens stabila rapport-ID gör återförsök säkra: ett befintligt
+utkast eller inskick skrivs aldrig över av upprepad skapning. Svaret anger `created: false`
+och aktuell status; formuläret behåller lokala ändringar och erbjuder att öppna rapporten.
 
 Andra övergångar avslås. `submitted` och `approved` kan inte redigeras normalt.
 Vid samtidig ändring ska anropet misslyckas med konflikt så att granskaren får läsa
@@ -143,10 +202,13 @@ Eventuell rättelse efter godkännande kräver ett separat beslut och flöde sen
 
 ### Separat faktureringsstatus
 
-Förslag: `not_ready` före godkännande, `ready` vid godkännande och `handled` när
-faktureringsansvarig markerat underlaget som hanterat i Fortnox. Rapportstatus förblir
-`approved`. Spara vem, när och valfri Fortnox-referens. Tillåt bara övergången från
-`ready` till `handled` en gång, med villkorad uppdatering och historikhändelse.
+Implementerat: `not_ready` före godkännande, `ready` vid godkännande och `handled`
+när faktureringsansvarig eller administratör markerar underlaget som helt klart i
+bokföringssystemet. Rapportstatus förblir `approved`. API:t kräver `confirmed: true`,
+aktuell `revision` och referens till godkänd version. Endast övergången `ready` till
+`handled` tillåts. Aktör, tid och version sparas med en historikhändelse i samma
+transaktion. Upprepade eller samtidiga anrop kan inte ändra den första markeringen.
+En återställning eller referens till bokföringssystemet är inte implementerad.
 PDF-hämtning ska inte ändra faktureringsstatus. En framtida export behöver dessutom
 en unik exportnyckel så att upprepade försök inte ger dubbla överföringar.
 
@@ -157,7 +219,7 @@ Fältuppsättningen följer originalblanketterna. Så här är de tolkade i vers
 | Underlag | Beslut i version 1 |
 | --- | --- |
 | TMA | Regnr TMA-bil, datum, kund, märkning, vägnummer, arbetsplats, start- och sluttid, rast i minuter, debiterbara timmar, kontroll före avfärd (ja/nej), arbetsuppgifter, avvikelser, tillbud (ja/nej) med obligatorisk beskrivning vid ja, samt namn. Pappersunderskriften ersätts av den inloggade rapportören vid inskick. |
-| TMA-tid | Klockslag utan datum; sluttid före starttid tolkas som nästa dygn. Arbetad tid = spann minus rast och visas med två decimaler. Lika start- och sluttid ger en varning. Debiterbara timmar anges alltid manuellt; avvikelse mot arbetad tid ger en varning men blockerar inte. |
+| TMA-tid | Klockslag utan datum; sluttid före starttid tolkas som nästa dygn. Arbetad tid = spann minus rast, avrundad till högst två decimaler. Lika start- och sluttid ger en varning. Debiterbara timmar fylls automatiskt i och kan ändras manuellt. Avvikelse mot arbetad tid ger en varning men blockerar inte. |
 | Bärgning | Kund, förare, telefon, person-/orgnr, körkort 4d, försäkringsbolag, självrisk, skadenummer, fakturamail, regnr bil och/eller släp, objekt/märke, fordonstyp, last i ton, bruttovikt, mätarställning, olycksplats, bärgad till/KPP, datum, förare bärgaren, extra man, tiderna start, ankomst, lastad, utfört/KPP och åter station, använd tid, total körsträcka, orsak (flerval, annan orsak kräver text), uppdrag (flerval) och övrig information. |
 
 | Underlag | Behöver fortfarande verifieras |
@@ -165,7 +227,6 @@ Fältuppsättningen följer originalblanketterna. Så här är de tolkade i vers
 | TMA-tid | Om avvikelse mellan arbetad och debiterbar tid ska kräva en förklaring för att kunna skickas in, samt jobb längre än ett dygn (hanteras i dag som högst 24 timmar). |
 | Bärgning | Enheten för bärgad bruttovikt (sparas som text tills vidare), baksidan för utlandskund, och om bilder ska vara obligatoriska. |
 | Bärgning-belopp | Uppställningsdygn, transport, kranbil och skrotning skrivs i dag i övrig information som på pappret. Strukturerade kostnadsrader kräver verifierade prisregler, valuta, moms och avrundning. |
-| Roller | Om rapportör även kan granska, om egen rapport får godkännas och vilka som får se underlag. |
 
 Mallar ska först konfigureras internt med sektioner, fälttyper, etiketter, obligatoriska
 fält och tillåtna validerings-/beräkningsregler. Publicering valideras på servern.
@@ -182,9 +243,11 @@ Originalens namn, registreringsnummer och priser ska inte användas som produktd
 4. Första administratörskontot är skapat lokalt. Mallarna för TMA och bärgning är publicerade
    för företaget och formuläret kan fyllas i och kontrolleras; se verifieringen nedan.
 5. Användar-/rolladministration på webben och återställning av lösenord återstår i steg B.
-6. Bygg därefter sparande av rapporter (steg C): utkast, inskick och granskning mot
-   rapportens mallversion, och testa rapporters företagsgräns och ägarskap för varje
-   läsning och ändring.
+6. Utkast, inskick, komplettering med kommentar, versionshistorik, godkännande och
+   läsvy för faktureringsunderlag är byggda och testade med ändrade ID:n, olika roller
+   i samma företag och separata företag. Administratörer får godkänna egna rapporter.
+7. Klarmarkering efter administration i bokföringssystemet är implementerad och testad.
+   PDF avvaktar enligt användarens beslut.
 
 Verifierat 2026-10-02 för mallsteget: `npm run test:templates` (sex tester, bland annat
 22:30–00:30 = 2 h över midnatt och att avvikande debiterbara timmar behålls med varning),

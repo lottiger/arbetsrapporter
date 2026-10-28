@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { requirePageAccess } from "@/server/auth/page-access";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FilterNav, resolveFilter, type FilterOption } from "@/components/navigation/filter-nav";
+import { headers } from "next/headers";
+import { listReports } from "@/server/reports/service";
+import { reportDependencies } from "@/server/reports/http";
+import { reportPage } from "@/domain/reports";
+import { ReportList, ReportPagination } from "@/components/reports/report-list";
 
 export const metadata: Metadata = { title: "Mina rapporter" };
 
@@ -14,15 +19,18 @@ const filters = [
 ] as const satisfies readonly FilterOption[];
 
 export default async function ReportsPage({ searchParams }: PageProps<"/rapportor/rapporter">) {
-  await requirePageAccess(["reporter"]);
-  const selected = resolveFilter((await searchParams).status, filters);
+  const { company } = await requirePageAccess(["reporter"]);
+  const query = await searchParams;
+  const selected = resolveFilter(query.status, filters);
+  const result = await listReports(reportDependencies(), await headers(), company._id, "mine", selected.value, reportPage(query.page));
   return (
     <>
       <header className="page-heading"><p className="eyebrow">DITT ARBETE</p><h1>Mina rapporter</h1><p>Från första utkast till färdigt underlag.</p></header>
       <FilterNav label="Filtrera mina rapporter efter status" basePath="/rapportor/rapporter" options={filters} selected={selected.value} />
       <div className="panel" key={selected.value}>
-        <EmptyState icon="report" title={selected.title}><p>{selected.description}</p><p className="empty-note">Rapportlistan kopplas in i ett kommande steg.</p></EmptyState>
+        {result.reports.length ? <ReportList reports={result.reports} /> : <EmptyState icon="report" title={selected.title}><p>{selected.description}</p></EmptyState>}
       </div>
+      <ReportPagination page={result.page} hasMore={result.hasMore} basePath="/rapportor/rapporter" status={selected.value} />
     </>
   );
 }

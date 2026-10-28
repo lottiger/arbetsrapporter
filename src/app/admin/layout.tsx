@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <Brand href={membership.roles.includes("company_admin") ? "/admin/granskning" : "/admin/underlag"} />
+        <Brand href="/admin/fakturaunderlag" />
         <div className="sidebar-heading">ARBETSYTA</div>
         <WorkspaceNav workspace="admin" canReview={membership.roles.includes("company_admin")} />
         <div className="sidebar-footer"><Icon name="check" /><p>Från utfört arbete<br />till granskat underlag.</p></div>

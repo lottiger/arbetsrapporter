@@ -3,6 +3,10 @@ import { requirePageAccess } from "@/server/auth/page-access";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { EmptyState } from "@/components/ui/empty-state";
+import { headers } from "next/headers";
+import { listReports } from "@/server/reports/service";
+import { reportDependencies } from "@/server/reports/http";
+import { ReportList } from "@/components/reports/report-list";
 
 export const metadata: Metadata = { title: "Din översikt" };
 
@@ -13,7 +17,8 @@ const shortcuts: { status: string; title: string; description: string; icon: Ico
 ];
 
 export default async function ReporterHome() {
-  await requirePageAccess(["reporter"]);
+  const { company } = await requirePageAccess(["reporter"]);
+  const recent = await listReports(reportDependencies(), await headers(), company._id, "mine");
   return (
     <>
       <header className="page-heading">
@@ -41,9 +46,9 @@ export default async function ReporterHome() {
       <section className="section-block" aria-labelledby="recent-title">
         <div className="section-heading"><h2 id="recent-title">Dina rapporter</h2><Link href="/rapportor/rapporter">Visa alla <span aria-hidden="true">↗</span></Link></div>
         <div className="panel">
-          <EmptyState icon="report" title="Här börjar din rapportering">
+          {recent.reports.length ? <ReportList reports={recent.reports.slice(0, 5)} /> : <EmptyState icon="report" title="Här börjar din rapportering">
             <p>Här kommer du att se dina senaste rapporter och vad som händer med dem.</p>
-          </EmptyState>
+          </EmptyState>}
         </div>
       </section>
     </>

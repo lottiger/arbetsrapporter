@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evaluateAnswers, minutesBetween, templateDefinitionIssues } from "../src/domain/templates.ts";
+import { calculatedTimeHours, evaluateAnswers, fillAutomaticTimes, minutesBetween, templateDefinitionIssues } from "../src/domain/templates.ts";
 import { builtInTemplates } from "../src/domain/templates/index.ts";
 import { tmaTemplate } from "../src/domain/templates/tma.ts";
 import { bargningTemplate } from "../src/domain/templates/bargning.ts";
@@ -47,6 +47,28 @@ test("billable hours that differ from worked time are kept and only produce a wa
   assert.equal(result.warnings.length, 1);
   assert.equal(result.warnings[0].field, "debiterbaraTimmar");
   assert.ok(result.warnings[0].message.includes("1,5"));
+});
+
+test("automatic time accounts for midnight, breaks and minute precision", () => {
+  const rule = tmaTemplate.rules.find((rule) => rule.type === "time_span");
+  assert.equal(calculatedTimeHours(rule, { starttid: "22:30", sluttid: "00:30", rast: "0" }), "2");
+  assert.equal(calculatedTimeHours(rule, { starttid: "22:30", sluttid: "00:30", rast: "30" }), "1.5");
+  assert.equal(calculatedTimeHours(rule, { starttid: "08:00", sluttid: "08:01", rast: "0" }), "0.02");
+  assert.equal(calculatedTimeHours(rule, { starttid: "08:00", sluttid: "08:00", rast: "0" }), "0");
+  const towing = bargningTemplate.rules.find((rule) => rule.type === "time_span");
+  assert.equal(calculatedTimeHours(towing, { start: "23:15", aterStation: "01:45" }), "2.5");
+});
+
+test("automatic time waits for valid inputs and never changes a manual value", () => {
+  const rule = tmaTemplate.rules.find((rule) => rule.type === "time_span");
+  for (const answers of [{}, { starttid: "22:30" }, { starttid: "25:00", sluttid: "01:00" },
+    { starttid: "22:30", sluttid: "00:30", rast: "-1" }, { starttid: "22:30", sluttid: "00:30", rast: "1.5" },
+    { starttid: "22:30", sluttid: "00:30", rast: "121" }]) assert.equal(calculatedTimeHours(rule, answers), null);
+  const answers = { ...tmaExample, debiterbaraTimmar: "4" };
+  assert.equal(fillAutomaticTimes(tmaTemplate, answers, []).debiterbaraTimmar, "4");
+  assert.equal(fillAutomaticTimes(tmaTemplate, answers, ["debiterbaraTimmar"]).debiterbaraTimmar, "2");
+  assert.equal(fillAutomaticTimes(tmaTemplate, { ...answers, sluttid: "" }, ["debiterbaraTimmar"]).debiterbaraTimmar, "");
+  assert.equal(answers.debiterbaraTimmar, "4");
 });
 
 test("required fields, breaks longer than the shift and incidents without description are errors", () => {

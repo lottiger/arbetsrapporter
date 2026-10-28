@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3001",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "setup:local": "node scripts/setup-local.mjs",
     "config:check": "node scripts/check-config.mjs",
     "db:check": "node scripts/check-db.mjs",
     "admin:create": "node --conditions=react-server scripts/create-admin.mjs",
+    "account:reset-password": "node --conditions=react-server scripts/reset-password.mjs",
     "templates:publish": "node --conditions=react-server scripts/publish-templates.mjs",
     "test:auth": "node --conditions=react-server --test scripts/auth.integration.test.mjs",
+    "test:reports": "node --conditions=react-server --test scripts/reports.integration.test.mjs",
     "test:config": "node --test scripts/config.test.mjs",
+    "test:offline": "node --test scripts/offline.test.mjs",
     "test:templates": "node --test scripts/templates.test.mjs"
   },
   "dependencies": {

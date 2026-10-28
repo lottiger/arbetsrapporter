@@ -40,7 +40,7 @@ if (!process.stdin.isTTY) {
       process.exitCode = 1;
     } else {
       await provisionCompany(client, connection.db, connection.config, { company, name, email, password });
-      console.log("Företaget och administratörskontot är skapade. Logga in på http://localhost:3000/logga-in.");
+      console.log("Företaget och administratörskontot är skapade. Logga in på http://localhost:3001/logga-in.");
     }
   } catch {
     console.error("Kontot kunde inte skapas. Kontrollera uppgifterna, att företag/e-post inte redan finns, samt npm run db:check. Befintliga konton har inte ändrats.");

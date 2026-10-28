@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { clearOffline, offlineOwner } from "@/lib/offline-store";
 
 export function SignInForm() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export function SignInForm() {
             : "Inloggningen misslyckades. Kontrollera e-postadress och lösenord.");
         return;
       }
+      const owner = offlineOwner();
+      if (owner && owner !== result.data.user.id) clearOffline();
       router.replace("/foretag");
       router.refresh();
     } catch {

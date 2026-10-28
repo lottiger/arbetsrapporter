@@ -153,9 +153,10 @@ sparas som version 1 i `templates` och `templateVersions`. Körs kommandot igen 
 malldefinitionen ändrats händer ingenting; en ändrad definition får nästa versionsnummer
 och tidigare versioner behålls oförändrade.
 
-Öppna därefter **Ny rapport** i rapportörsvyn och välj en mall. Fyll i och tryck
-**Kontrollera uppgifterna**. Under **Mallar** i administratörsvyn visas alla fält och regler.
-Rapporter kan ännu inte sparas.
+Öppna därefter **Ny rapport** i rapportörsvyn och välj en mall. Fyll i och välj
+**Skicka in**. Uppgifterna kontrolleras automatiskt innan du bekräftar inskicket.
+Välj **Spara utkast** om du vill fortsätta senare. Under **Mallar** i administratörsvyn
+visas alla fält och regler.
 
 ## Skapa lokal konfiguration på en ny dator
 

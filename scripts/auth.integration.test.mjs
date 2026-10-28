@@ -76,7 +76,7 @@ test("Better Auth and company isolation against the local app and Atlas test dat
       assert.equal((await request(pathB, cookieB)).status, 200);
       assert.equal((await request(pathB, cookieB, "PATCH", { name: "Blocked by role" })).status, 403);
       const selected = cookieB + `; arbetsrapporter_company=${b.organizationId}`;
-      const adminResponse = await request("/admin/granskning", selected);
+      const adminResponse = await request("/admin/fakturaunderlag", selected);
       // Next may stream redirects with 200; neither response may contain protected page content.
       const adminHTML = await adminResponse.text();
       assert.ok(adminResponse.headers.get("location")?.includes("ingen-behorighet") || adminHTML.includes("NEXT_REDIRECT"));
