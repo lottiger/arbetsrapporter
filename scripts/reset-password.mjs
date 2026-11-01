@@ -28,7 +28,7 @@ if (!process.stdin.isTTY || process.argv.length > 2) {
     const user = await db.collection("user").findOne({ email });
     if (!user) throw new Error("missing user");
     console.log(`Byter lösenord för ${email} och avslutar kontots gamla inloggningar.`);
-    process.stdout.write("Nytt lösenord (12–128 tecken, visas inte): ");
+    process.stdout.write("Nytt lösenord (6–128 tecken, visas inte): ");
     muted = true;
     const password = await prompt.question("");
     muted = false;
@@ -38,7 +38,7 @@ if (!process.stdin.isTTY || process.argv.length > 2) {
     muted = false;
     process.stdout.write("\n");
     if (password.length < 6 || password.length > 128 || password !== confirmation) {
-      console.error("Lösenorden måste vara lika och ha 12–128 tecken. Inget har ändrats.");
+      console.error("Lösenorden måste vara lika och ha 6–128 tecken. Inget har ändrats.");
       process.exitCode = 1;
     } else {
       const hash = await hashPassword(password);

@@ -13,6 +13,13 @@ async function prepareShell() {
     await cache.addAll(assets);
     await cache.put(SHELL, response);
 }
+/* Times out only while waiting for headers; a slow body download is never aborted. */
+async function fetchHeaders(request, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try { return await fetch(request, { signal: controller.signal }); }
+  finally { clearTimeout(timer); }
+}
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     await prepareShell();
@@ -39,7 +46,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE);
       try {
-        const response = await fetch(event.request, { signal: AbortSignal.timeout(5000) });
+        const response = await fetchHeaders(event.request, 5000);
         if (response.ok) { await cache.put(event.request, response.clone()); return response; }
         return (await cache.match(event.request)) ?? response;
       } catch {
@@ -48,7 +55,7 @@ self.addEventListener("fetch", (event) => {
     })());
   } else if (event.request.mode === "navigate") {
     event.respondWith((async () => {
-      try { return await fetch(event.request, { signal: AbortSignal.timeout(5000) }); }
+      try { return await fetchHeaders(event.request, 10000); }
       catch {
         if (url.pathname !== SHELL) return Response.redirect(new URL(SHELL, self.location.origin), 302);
         return (await (await caches.open(CACHE)).match(SHELL)) ?? Response.error();

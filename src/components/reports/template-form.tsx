@@ -143,7 +143,8 @@ export function TemplateForm({ definition, organizationId, templateVersionId, re
   const [editCount, setEditCount] = useState(0);
 
   useEffect(() => {
-    if (!formRef.current || savingRef.current || !onLocalChange) return;
+    // Opening a form is not an edit; only user changes create a local draft.
+    if (editCount === 0 || !formRef.current || savingRef.current || !onLocalChange) return;
     onLocalChange({ id: reportId ?? (newId.current ??= crypto.randomUUID()),
       answers: collectAnswers(formRef.current, definition),
       automaticTimeFields: Object.entries(timeFields).filter(([, field]) => field.automatic).map(([key]) => key) });

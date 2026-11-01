@@ -26,7 +26,7 @@ if (!process.stdin.isTTY) {
     const company = await prompt.question("Företagsnamn: ");
     const name = await prompt.question("Ditt namn: ");
     const email = await prompt.question("E-postadress: ");
-    process.stdout.write("Lösenord (12–128 tecken, visas inte): ");
+    process.stdout.write("Lösenord (6–128 tecken, visas inte): ");
     muted = true;
     const password = await prompt.question("");
     muted = false;

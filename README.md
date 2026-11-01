@@ -40,10 +40,9 @@ inte till Atlas. Saknad databasadress är ett väntat fel tills den har fyllts i
 `db:check` ansluter till konfigurerad Atlas-databas för ett lästest.
 Testa formatkontrollen med `npm run test:config`.
 
-I nuvarande lokala konfiguration ligger MongoDB-adressen i `.env`, medan authnyckeln
-ligger i `.env.local`. En tom variabel i `.env.local` tar företräde över `.env` och ska
-inte läggas tillbaka. `MONGO_USER_NAME` och `MONGO_PASSWORD` är inte appinställningar;
-appen använder den kompletta anslutningssträngen i `MONGODB_URI`.
+All lokal konfiguration ligger i `.env.local`; någon `.env` behövs inte. Separata
+variabler för MongoDB-användare och lösenord används inte, eftersom appen läser den
+kompletta anslutningssträngen i `MONGODB_URI`.
 
 ## Skapa första administratören
 
@@ -53,7 +52,7 @@ Kör i en interaktiv terminal i projektmappen:
 npm run admin:create
 ```
 
-Ange företagsnamn, ditt namn, e-post och ett lösenord på 12–128 tecken.
+Ange företagsnamn, ditt namn, e-post och ett lösenord på 6–128 tecken.
 Lösenordet visas inte medan du skriver och anges två gånger. Kommandot skapar ett
 nytt företag och ett konto med rollerna rapportör, företagsadministratör och
 faktureringsansvarig i just det företaget. Befintliga konton och företag skrivs inte över.
@@ -70,7 +69,7 @@ projektet eller starta med `--port 3001`.
 ## Glömt lösenord (lokalt)
 
 Kör `npm.cmd run account:reset-password` i en interaktiv terminal i projektmappen.
-Ange kontots e-postadress och ett nytt lösenord på 12–128 tecken två gånger.
+Ange kontots e-postadress och ett nytt lösenord på 6–128 tecken två gånger.
 Lösenordet döljs och ska inte anges i chatten eller som kommandoradsargument.
 Kommandot använder Better Auths lösenordshashning och byter lösenord samt tar bort
 kontots gamla sessioner i samma databastransaktion. Företag, roller och rapporter
